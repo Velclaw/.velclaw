@@ -18,10 +18,11 @@ jobs:
         env:
           OPS_URL: ${{ secrets.VELCLAW_OPS_WEBHOOK_URL }}
           OPS_SECRET: ${{ secrets.VELCLAW_GITHUB_WEBHOOK_SECRET }}
+          BODY: ${{ toJson(github.event) }}
         run: |
           test -n "$OPS_URL" || { echo "VELCLAW_OPS_WEBHOOK_URL is not configured"; exit 0; }
           test -n "$OPS_SECRET" || { echo "VELCLAW_GITHUB_WEBHOOK_SECRET is not configured"; exit 0; }
-          BODY='${{ toJson(github.event) }}'
+          test -n "$BODY" || { echo "Event payload is empty"; exit 1; }
           SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$OPS_SECRET" | sed 's/^.* //')
           curl --fail-with-body --silent --show-error \
             -X POST "$OPS_URL" \
